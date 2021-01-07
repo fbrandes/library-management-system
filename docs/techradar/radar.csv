@@ -1,0 +1,4 @@
+Spring Boot;adopt;frameworks;true;test
+Jakarta EE;hold;platform;true;test
+Kubernetes:adopt:platform;true;test
+PlantUML:trial:tools;true;test
