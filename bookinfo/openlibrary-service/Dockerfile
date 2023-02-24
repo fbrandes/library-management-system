@@ -1,5 +1,7 @@
-FROM eclipse-temurin:17
+FROM openjdk:17
 VOLUME /tmp
-COPY build/libs/openlibrary-service-*-SNAPSHOT.jar /app.jar
-
+EXPOSE 8080
+ARG JAR_FILE=build/libs/openlibrary-service-*-SNAPSHOT.jar
+ADD ${JAR_FILE} app.jar
+ENTRYPOINT ["java", "-jar", "/app.jar"]
 
