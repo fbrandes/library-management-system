@@ -6,5 +6,10 @@ import java.net.URL;
 
 @Data
 public class Cover {
-    URL small, medium, large, extraLarge, smallThumbnail, thumbnail;
+    URL small;
+    URL medium;
+    URL large;
+    URL extraLarge;
+    URL smallThumbnail;
+    URL thumbnail;
 }

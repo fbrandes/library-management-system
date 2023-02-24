@@ -18,6 +18,7 @@ public class OpenLibraryServiceController {
     private OpenLibraryService openLibraryService;
 
     @GetMapping(value = "books", params = {"page", "limit"})
-    public ResponseEntity<BookDto> find(@RequestParam String query, @RequestParam int page, @RequestParam int limit) {return ResponseEntity.ok(openLibraryService.getBooks(URLEncoder.encode(query, StandardCharsets.UTF_8), page, limit));
+    public ResponseEntity<BookDto> find(@RequestParam String query, @RequestParam int page, @RequestParam int limit) {
+        return ResponseEntity.ok(openLibraryService.getBooks(URLEncoder.encode(query, StandardCharsets.UTF_8), page, limit));
     }
 }

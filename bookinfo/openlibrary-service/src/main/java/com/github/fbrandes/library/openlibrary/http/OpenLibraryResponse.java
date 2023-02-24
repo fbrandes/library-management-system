@@ -10,5 +10,6 @@ import java.util.List;
 public class OpenLibraryResponse {
     private int start;
     private int numFound;
-    @SerializedName("docs") private List<Book> documents;
+    @SerializedName("docs")
+    private List<Book> documents;
 }
