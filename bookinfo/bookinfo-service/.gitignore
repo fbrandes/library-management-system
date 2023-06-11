@@ -1,21 +1,2 @@
-# Compiled class file
-*.class
-
-# Log file
-*.log
-
-# IntelliJ
-.idea/*
-
-# Package Files
-*.jar
-*.war
-*.ear
-
-# Gradlery
-.gradle
-/build/
-gradle-app.setting
-
-# Don't ignore Gradle wrapper jar file
-!gradle-wrapper.jar
+# Plugin directory
+/.quarkus/cli/plugins/

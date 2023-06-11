@@ -1,16 +1,12 @@
 plugins {
-    id 'java'
-    id 'io.spring.dependency-management' version '1.1.0'
     id 'org.springframework.boot' version '3.0.2'
+    id 'io.spring.dependency-management' version '1.1.0'
+    id 'java'
 }
 
-group = 'com.github.fbrandes.library.openlibrary'
+group = 'com.github.fbrandes.library.googlebooks'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '17'
-
-springBoot {
-    mainClass = 'com.github.fbrandes.library.openlibrary.OpenLibraryServiceApplication'
-}
 
 configurations {
     compileOnly {
@@ -30,12 +26,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'com.google.guava:guava:30.1.1-jre'
-    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'com.google.code.gson:gson:2.8.6'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.testcontainers:junit-jupiter'
-    implementation platform('org.testcontainers:testcontainers-bom:1.18.3')
+
 }
 
 dependencyManagement {

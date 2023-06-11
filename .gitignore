@@ -6,9 +6,47 @@
 
 # IntelliJ
 .idea/*
+*.iml
+*.ipr
+*.iml
+*.iws
 
-# Ignore Gradle project-specific cache directory
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+
+# NetBeans
+nb-configuration.xml
+
+# Visual Studio Code
+.vscode
+.factorypath
+
+# OSX
+.DS_Store
+
+# Vim
+*.swp
+*.swo
+
+# patch
+*.orig
+*.rej
+
+# Local environment
+.env
+
+# Package Files
+*.jar
+*.war
+*.ear
+
+# Ignore Gradle stuff
 .gradle
-
-# Ignore Gradle build output directory
 build
+gradle-app.setting
+
+# Don't ignore Gradle wrapper jar file
+!gradle-wrapper.jar
