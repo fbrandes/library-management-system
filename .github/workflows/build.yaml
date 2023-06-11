@@ -18,9 +18,9 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-          cache: maven
+          cache: gradle
       - name: Build
         working-directory: bookinfo/bookinfo-service
-        run: mvn clean verify
+        run: gradle build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
