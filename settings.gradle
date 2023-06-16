@@ -16,3 +16,5 @@ include 'bookinfo:google-data-service'
 include 'bookinfo:openlibrary-service'
 
 include 'gateway'
+include 'system-tests'
+

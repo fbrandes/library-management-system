@@ -46,6 +46,7 @@ nb-configuration.xml
 # Ignore Gradle stuff
 .gradle
 build
+build/**
 gradle-app.setting
 
 # Don't ignore Gradle wrapper jar file
