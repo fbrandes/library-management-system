@@ -1,0 +1,23 @@
+plugins {
+	id 'java'
+}
+
+group = 'com.github.fbrandes.library'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	sourceCompatibility = '17'
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation platform('org.testcontainers:testcontainers-bom:1.18.3')
+	testImplementation 'org.testcontainers:junit-jupiter'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
