@@ -15,3 +15,4 @@ include 'bookinfo:bookinfo-service'
 include 'bookinfo:google-data-service'
 include 'bookinfo:openlibrary-service'
 
+include 'gateway'
