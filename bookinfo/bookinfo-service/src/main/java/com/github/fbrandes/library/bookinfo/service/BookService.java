@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.List;
 
 @ApplicationScoped
-public class BookInfoService {
+public class BookService {
     @Inject
     BookRepository bookRepository;
 

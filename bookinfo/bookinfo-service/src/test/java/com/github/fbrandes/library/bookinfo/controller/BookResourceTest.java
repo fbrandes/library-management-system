@@ -1,9 +1,8 @@
 package com.github.fbrandes.library.bookinfo.controller;
 
-import com.github.fbrandes.library.bookinfo.model.Author;
+import com.github.fbrandes.library.bookinfo.BookTestDataCreator;
 import com.github.fbrandes.library.bookinfo.model.Book;
-import com.github.fbrandes.library.bookinfo.model.Isbn;
-import com.github.fbrandes.library.bookinfo.service.BookInfoService;
+import com.github.fbrandes.library.bookinfo.service.BookService;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,31 +28,32 @@ class BookResourceTest {
     private BookResource bookResource;
 
     @Mock
-    private BookInfoService bookInfoService;
+    private BookService bookService;
 
     private List<Book> mockBooks;
 
     @BeforeEach
     void setup() {
-        mockBooks = createMockBooks();
+        mockBooks = BookTestDataCreator.createBooks();
     }
 
     @Test
     void shouldFindBookById() throws IOException {
         // given
-        when(bookInfoService.get(eq("123"))).thenReturn(mockBooks.get(0));
+        String findId = mockBooks.get(0).getId();
+        when(bookService.get(eq(findId))).thenReturn(mockBooks.get(0));
 
         // when
-        Book book = bookResource.find("123");
+        Book book = bookResource.find(findId);
 
         /// then
-        assertEquals("123", book.getId());
+        assertEquals(findId, book.getId());
     }
 
     @Test
     void shouldFindBookByIsbn() throws IOException {
         // given
-        when(bookInfoService.searchByIsbn(eq("978-0134685991"))).thenReturn(List.of(mockBooks.get(1)));
+        when(bookService.searchByIsbn(eq("978-0134685991"))).thenReturn(List.of(mockBooks.get(1)));
 
         // when
         List<Book> books = bookResource.findByIsbn("978-0134685991");
@@ -75,7 +74,7 @@ class BookResourceTest {
     @Test
     void shouldFindBookByTitle() throws IOException {
         // given
-        when(bookInfoService.searchByTitle(eq("The Pragmatic Programmer"))).thenReturn(List.of(mockBooks.get(2)));
+        when(bookService.searchByTitle(eq("The Pragmatic Programmer"))).thenReturn(List.of(mockBooks.get(2)));
 
         // when
         List<Book> books = bookResource.findByTitle("The Pragmatic Programmer");
@@ -96,7 +95,7 @@ class BookResourceTest {
     @Test
     void shouldFindBookByAuthor() throws IOException {
         // given
-        when(bookInfoService.searchByAuthor(eq("Andrew Hunt"))).thenReturn(List.of(mockBooks.get(2)));
+        when(bookService.searchByAuthor(eq("Andrew Hunt"))).thenReturn(List.of(mockBooks.get(2)));
 
         // when
         List<Book> books = bookResource.findByAuthor("Andrew Hunt");
@@ -116,8 +115,8 @@ class BookResourceTest {
     @Test
     void shouldReturnSameBookForCoAuthors() throws IOException {
         // given
-        when(bookInfoService.searchByAuthor(eq("Andrew Hunt"))).thenReturn(List.of(mockBooks.get(2)));
-        when(bookInfoService.searchByAuthor(eq("David Thomas"))).thenReturn(List.of(mockBooks.get(2)));
+        when(bookService.searchByAuthor(eq("Andrew Hunt"))).thenReturn(List.of(mockBooks.get(2)));
+        when(bookService.searchByAuthor(eq("David Thomas"))).thenReturn(List.of(mockBooks.get(2)));
 
         // when
         Book book1 = bookResource.findByAuthor("Andrew Hunt").get(0);
@@ -134,45 +133,11 @@ class BookResourceTest {
         Book newBook = new Book();
         newBook.setId(id);
 
-        doNothing().when(bookInfoService).index(newBook);
+        doNothing().when(bookService).index(newBook);
 
         try (Response response = bookResource.index(newBook)) {
             assertEquals(201, response.getStatus());
             assertEquals("/books/" + id, response.getLocation().toString());
         }
-    }
-
-    private List<Book> createMockBooks() {
-        Book book1 = new Book();
-        book1.setTitle("The Mythical Man-Month");
-        book1.setId("123");
-        Isbn isbn1 = new Isbn();
-        isbn1.setIdentifier("978-0-201-00650-6");
-        isbn1.setType(Isbn.Type.ISBN_13);
-        Isbn isbn2 = new Isbn();
-        isbn2.setIdentifier("978-0-201-83595-3");
-        isbn2.setType(Isbn.Type.ISBN_13);
-        book1.setIsbn(List.of(isbn1, isbn2));
-        book1.setAuthors(List.of(new Author("", "Fred Brooks", Collections.emptyList())));
-
-        Book book2 = new Book();
-        book2.setTitle("Effective Java");
-        book2.setId("456");
-        Isbn isbn3 = new Isbn();
-        isbn3.setIdentifier("978-0134685991");
-        isbn3.setType(Isbn.Type.ISBN_13);
-        book2.setIsbn(List.of(isbn3));
-        book2.setAuthors(List.of(new Author("", "Joshua Bloch", Collections.emptyList())));
-
-        Book book3 = new Book();
-        book3.setTitle("The Pragmatic Programmer");
-        book3.setId("789");
-        Isbn isbn4 = new Isbn();
-        isbn4.setIdentifier("978-0135957059");
-        isbn4.setType(Isbn.Type.ISBN_13);
-        book3.setIsbn(List.of(isbn4));
-        book3.setAuthors(List.of(new Author("", "Andrew Hunt", Collections.emptyList()),
-                new Author("", "David Thomas", Collections.emptyList())));
-        return List.of(book1, book2, book3);
     }
 }

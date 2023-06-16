@@ -1,7 +1,7 @@
 package com.github.fbrandes.library.bookinfo.controller;
 
 import com.github.fbrandes.library.bookinfo.model.Book;
-import com.github.fbrandes.library.bookinfo.service.BookInfoService;
+import com.github.fbrandes.library.bookinfo.service.BookService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.GET;
@@ -21,7 +21,7 @@ import java.util.UUID;
 @Path("/books")
 public class BookResource {
     @Inject
-    BookInfoService bookInfoService;
+    BookService bookService;
 
     @Operation(operationId = "find", description = "Find book with matching id")
     @APIResponses(value = {
@@ -34,7 +34,7 @@ public class BookResource {
     @GET
     @Path("/{id}")
     public Book find(String id) throws IOException {
-        return bookInfoService.get(id);
+        return bookService.get(id);
     }
 
     @Operation(operationId = "findByIsbn", description = "Find books with matching ISBN")
@@ -49,7 +49,7 @@ public class BookResource {
     @Path("/isbn")
     public List<Book> findByIsbn(@RestQuery String isbn) throws IOException {
         if (isbn != null) {
-            return bookInfoService.searchByIsbn(isbn);
+            return bookService.searchByIsbn(isbn);
         } else {
             throw new BadRequestException("Should provide isbn query parameter");
         }
@@ -67,7 +67,7 @@ public class BookResource {
     @Path("/title")
     public List<Book> findByTitle(@RestQuery String title) throws IOException {
         if (title != null) {
-            return bookInfoService.searchByTitle(title);
+            return bookService.searchByTitle(title);
         } else {
             throw new BadRequestException("Should provide title query parameter");
         }
@@ -85,7 +85,7 @@ public class BookResource {
     @Path("/author")
     public List<Book> findByAuthor(@RestQuery String author) throws IOException {
         if (author != null) {
-            return bookInfoService.searchByAuthor(author);
+            return bookService.searchByAuthor(author);
         } else {
             throw new BadRequestException("Should provide author query parameter");
         }
@@ -104,7 +104,7 @@ public class BookResource {
         if (book.getId() == null) {
             book.setId(UUID.randomUUID().toString());
         }
-        bookInfoService.index(book);
+        bookService.index(book);
         return Response.created(URI.create("/books/" + book.getId())).build();
     }
 }
