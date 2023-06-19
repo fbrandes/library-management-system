@@ -14,8 +14,15 @@ repositories {
 }
 
 dependencies {
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
+
 	implementation platform('org.testcontainers:testcontainers-bom:1.18.3')
-	testImplementation 'org.testcontainers:junit-jupiter'
+	testImplementation 'org.testcontainers:junit-jupiter:1.18.3'
+	testImplementation 'org.testcontainers:elasticsearch:1.18.3'
+
+	testImplementation 'ch.qos.logback:logback-classic:1.4.7'
+	testImplementation 'io.rest-assured:rest-assured:5.3.0'
+	testImplementation 'org.projectlombok:lombok:1.18.12'
 }
 
 tasks.named('test') {
