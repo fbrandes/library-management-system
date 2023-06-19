@@ -12,8 +12,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,13 +34,26 @@ class BookServiceTest {
     }
 
     @Test
-    void index() throws IOException {
+    void shouldFindAll() throws IOException {
+        // given
+        when(bookRepository.findAll(0, 3)).thenReturn(mockBooks);
+
+        // when
+        List<Book> books = bookService.findAll(0, 3);
+
+        // then
+        assertFalse(books.isEmpty());
+        assertEquals(3, books.size());
+    }
+
+    @Test
+    void shouldFindBook() throws IOException {
         // given
         doNothing().when(bookRepository).save(mockBooks.get(0));
         Book book = mockBooks.get(0);
 
         // when
-        bookService.index(book);
+        bookService.save(book);
 
         // then
         verify(bookRepository).save(book);
@@ -49,14 +63,15 @@ class BookServiceTest {
     void get() throws IOException {
         // given
         String bookId = mockBooks.get(0).getId();
-        when(bookRepository.findById(bookId)).thenReturn(mockBooks.get(0));
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(mockBooks.get(0)));
 
         // when
-        Book book = bookService.get(bookId);
+        Optional<Book> book = bookService.findById(bookId);
+        assertTrue(book.isPresent());
 
         // then
         verify(bookRepository).findById(bookId);
-        assertEquals(bookId, book.getId());
+        assertEquals(bookId, book.get().getId());
     }
 
     @Test
@@ -99,5 +114,17 @@ class BookServiceTest {
         // then
         verify(bookRepository).findByIsbn(isbn);
         assertEquals(isbn, books.get(0).getIsbn().get(0).getIdentifier());
+    }
+
+    @Test
+    void shouldDeleteBook() {
+        // given
+        doNothing().when(bookRepository).delete("123");
+
+        // when
+        bookService.delete("123");
+
+        // then
+        verify(bookRepository).delete("123");
     }
 }

@@ -4,6 +4,7 @@ import com.github.fbrandes.library.bookinfo.BookTestDataCreator;
 import com.github.fbrandes.library.bookinfo.model.Book;
 import com.github.fbrandes.library.bookinfo.service.BookService;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,13 +15,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BookResourceTest {
@@ -38,16 +38,40 @@ class BookResourceTest {
     }
 
     @Test
+    void shouldFindAll() throws IOException {
+        // given
+        when(bookService.findAll(0, 3)).thenReturn(mockBooks);
+
+        // when
+        try (Response response = bookResource.findAll(0, 3)) {
+            // then
+            assertEquals(200, response.getStatus());
+            assertNotNull(response.getEntity());
+
+            List<Book> books = response.readEntity(new GenericType<>() {});
+;
+            assertFalse(books.isEmpty());
+            assertEquals(3, books.size());
+            verify(bookService).findAll(0, 3);
+
+        }
+    }
+
+    @Test
     void shouldFindBookById() throws IOException {
         // given
         String findId = mockBooks.get(0).getId();
-        when(bookService.get(eq(findId))).thenReturn(mockBooks.get(0));
+        when(bookService.findById(eq(findId))).thenReturn(Optional.ofNullable(mockBooks.get(0)));
 
         // when
-        Book book = bookResource.find(findId);
+        try (Response response = bookResource.findById(findId)) {
+            // then
+            Book book = (Book) response.getEntity();
 
-        /// then
-        assertEquals(findId, book.getId());
+            assertEquals(200, response.getStatus());
+            assertNotNull(book);
+            assertEquals(findId, book.getId());
+        }
     }
 
     @Test
@@ -56,14 +80,17 @@ class BookResourceTest {
         when(bookService.searchByIsbn(eq("978-0134685991"))).thenReturn(List.of(mockBooks.get(1)));
 
         // when
-        List<Book> books = bookResource.findByIsbn("978-0134685991");
+        try (Response response = bookResource.findByIsbn("978-0134685991")) {
+            // then
+            assertEquals(200, response.getStatus());
 
-        // then
-        assertEquals(1, books.size());
+            List<Book> books = response.readEntity(new GenericType<>() {});
+            assertEquals(1, books.size());
 
-        Book book = books.get(0);
-        assertEquals(1, book.getIsbn().size());
-        assertEquals("978-0134685991", book.getIsbn().get(0).getIdentifier());
+            Book book = books.get(0);
+            assertEquals(1, book.getIsbn().size());
+            assertEquals("978-0134685991", book.getIsbn().get(0).getIdentifier());
+        }
     }
 
     @Test
@@ -77,14 +104,17 @@ class BookResourceTest {
         when(bookService.searchByTitle(eq("The Pragmatic Programmer"))).thenReturn(List.of(mockBooks.get(2)));
 
         // when
-        List<Book> books = bookResource.findByTitle("The Pragmatic Programmer");
+        try (Response response = bookResource.findByTitle("The Pragmatic Programmer")) {
+            // then
+            assertEquals(200, response.getStatus());
 
-        // then
-        assertEquals(1, books.size());
+            List<Book> books = response.readEntity(new GenericType<>() {});
+            assertEquals(1, books.size());
 
-        Book book = books.get(0);
-        assertEquals(1, book.getIsbn().size());
-        assertEquals("The Pragmatic Programmer", book.getTitle());
+            Book book = books.get(0);
+            assertEquals(1, book.getIsbn().size());
+            assertEquals("The Pragmatic Programmer", book.getTitle());
+        }
     }
 
     @Test
@@ -98,13 +128,16 @@ class BookResourceTest {
         when(bookService.searchByAuthor(eq("Andrew Hunt"))).thenReturn(List.of(mockBooks.get(2)));
 
         // when
-        List<Book> books = bookResource.findByAuthor("Andrew Hunt");
+        try (Response response = bookResource.findByAuthor("Andrew Hunt")) {
+            // then
+            assertEquals(200, response.getStatus());
 
-        // then
-        assertEquals(1, books.size());
+            List<Book> books = response.readEntity(new GenericType<>() {});
+            assertEquals(1, books.size());
 
-        Book book = books.get(0);
-        assertEquals(1, book.getAuthors().stream().filter(a -> a.getName().equals("Andrew Hunt")).toList().size());
+            Book book = books.get(0);
+            assertEquals(1, book.getAuthors().stream().filter(a -> a.getName().equals("Andrew Hunt")).toList().size());
+        }
     }
 
     @Test
@@ -119,8 +152,10 @@ class BookResourceTest {
         when(bookService.searchByAuthor(eq("David Thomas"))).thenReturn(List.of(mockBooks.get(2)));
 
         // when
-        Book book1 = bookResource.findByAuthor("Andrew Hunt").get(0);
-        Book book2 = bookResource.findByAuthor("David Thomas").get(0);
+        List<Book> b1 = (bookResource.findByAuthor("Andrew Hunt").readEntity(new GenericType<>() {}));
+        Book book1 = b1.get(0);
+        List<Book> b2 = (bookResource.findByAuthor("David Thomas").readEntity(new GenericType<>() {}));
+        Book book2 = b2.get(0);
 
         // then
         assertEquals(book1, book2);
@@ -133,11 +168,23 @@ class BookResourceTest {
         Book newBook = new Book();
         newBook.setId(id);
 
-        doNothing().when(bookService).index(newBook);
+        doNothing().when(bookService).save(newBook);
 
-        try (Response response = bookResource.index(newBook)) {
+        try (Response response = bookResource.create(newBook)) {
             assertEquals(201, response.getStatus());
             assertEquals("/books/" + id, response.getLocation().toString());
+        }
+    }
+
+    @Test
+    void shouldDeleteSuccessfully() throws IOException {
+        // given
+        doNothing().when(bookService).delete("123");
+
+        // when
+        try (Response response = bookResource.delete("123")) {
+            // then
+            assertEquals(204, response.getStatus());
         }
     }
 }

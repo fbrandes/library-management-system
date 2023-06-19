@@ -16,8 +16,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,6 +38,9 @@ class BookRepositoryTest {
     private SearchResponse<Book> searchResponse;
 
     @Mock
+    private DeleteResponse deleteResponse;
+
+    @Mock
     private HitsMetadata<Book> hitsMetadata;
 
     @Mock
@@ -49,7 +54,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    void save() throws IOException {
+    void shouldSaveBookSuccessfully() throws IOException {
         // given
         when(elasticsearchClient.index(ArgumentMatchers.<IndexRequest<Book>>any())).thenReturn(null);
         Book book = mockBooks.get(0);
@@ -62,7 +67,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    void findById() throws IOException {
+    void shouldFindBookById() throws IOException {
         // given
         String id = mockBooks.get(0).getId();
         when(elasticsearchClient.get(ArgumentMatchers.<GetRequest>any(), eq(Book.class))).thenReturn(getResponse);
@@ -70,15 +75,16 @@ class BookRepositoryTest {
         when(getResponse.source()).thenReturn(mockBooks.get(0));
 
         // when
-        Book book = bookRepository.findById(id);
+        Optional<Book> book = bookRepository.findById(id);
+        assertTrue(book.isPresent());
 
         // then
         verify(elasticsearchClient).get(ArgumentMatchers.<GetRequest>any(), eq(Book.class));
-        assertEquals(id, book.getId());
+        assertEquals(id, book.get().getId());
     }
 
     @Test
-    void findByTitle() throws IOException {
+    void shouldFindBookByTitle() throws IOException {
         // given
         String title = mockBooks.get(0).getTitle();
         when(elasticsearchClient.search(ArgumentMatchers.<SearchRequest>any(), eq(Book.class))).thenReturn(searchResponse);
@@ -97,7 +103,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    void findByAuthor() throws IOException {
+    void shouldFindBookByAuthor() throws IOException {
         // given
         String author = mockBooks.get(0).getAuthors().get(0).getName();
         when(elasticsearchClient.search(ArgumentMatchers.<SearchRequest>any(), eq(Book.class))).thenReturn(searchResponse);
@@ -116,7 +122,7 @@ class BookRepositoryTest {
     }
 
     @Test
-    void findByIsbn() throws IOException {
+    void shouldFindBookByIsbn() throws IOException {
         // given
         String isbn = mockBooks.get(0).getIsbn().get(0).getIdentifier();
         when(elasticsearchClient.search(ArgumentMatchers.<SearchRequest>any(), eq(Book.class))).thenReturn(searchResponse);
@@ -132,5 +138,17 @@ class BookRepositoryTest {
         verify(hitsMetadata).hits();
         verify(hit).source();
         assertEquals(isbn, books.get(0).getIsbn().get(0).getIdentifier());
+    }
+
+    @Test
+    void shouldDeleteBookSuccessfully() throws IOException {
+        // given
+        when(elasticsearchClient.delete(any(DeleteRequest.class))).thenReturn(deleteResponse);
+
+        // when
+        bookRepository.delete("123");
+
+        // then
+        verify(elasticsearchClient).delete(any(DeleteRequest.class));
     }
 }

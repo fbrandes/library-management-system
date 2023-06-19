@@ -3,10 +3,7 @@ package com.github.fbrandes.library.bookinfo.controller;
 import com.github.fbrandes.library.bookinfo.model.Book;
 import com.github.fbrandes.library.bookinfo.service.BookService;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.BadRequestException;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
@@ -16,12 +13,27 @@ import org.jboss.resteasy.reactive.RestQuery;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Path("/books")
 public class BookResource {
     @Inject
     BookService bookService;
+
+    @Operation(operationId = "find", description = "Find book with matching id")
+    @APIResponses(value = {
+        @APIResponse(responseCode = "200", description = "Successful retrieval"),
+        @APIResponse(responseCode = "400", description = "invalid query"),
+        @APIResponse(responseCode = "401", description = "Request not authorized"),
+        @APIResponse(responseCode = "404", description = "Service not found"),
+        @APIResponse(responseCode = "500", description = "Server error")
+    })
+    @GET
+    public Response findAll(@RestQuery int page, @RestQuery int size) throws IOException {
+        List<Book> books = bookService.findAll(page, size);
+        return Response.ok().entity(books).build();
+    }
 
     @Operation(operationId = "find", description = "Find book with matching id")
     @APIResponses(value = {
@@ -33,8 +45,13 @@ public class BookResource {
     })
     @GET
     @Path("/{id}")
-    public Book find(String id) throws IOException {
-        return bookService.get(id);
+    public Response findById(String id) throws IOException {
+        Optional<Book> book = bookService.findById(id);
+        if(book.isPresent()) {
+            return Response.ok().entity(book.get()).build();
+        } else {
+            throw new NotFoundException("No Book found with id " + id);
+        }
     }
 
     @Operation(operationId = "findByIsbn", description = "Find books with matching ISBN")
@@ -47,9 +64,9 @@ public class BookResource {
     })
     @GET
     @Path("/isbn")
-    public List<Book> findByIsbn(@RestQuery String isbn) throws IOException {
+    public Response findByIsbn(@RestQuery String isbn) throws IOException {
         if (isbn != null) {
-            return bookService.searchByIsbn(isbn);
+            return Response.ok().entity(bookService.searchByIsbn(isbn)).build();
         } else {
             throw new BadRequestException("Should provide isbn query parameter");
         }
@@ -65,9 +82,9 @@ public class BookResource {
     })
     @GET
     @Path("/title")
-    public List<Book> findByTitle(@RestQuery String title) throws IOException {
+    public Response findByTitle(@RestQuery String title) throws IOException {
         if (title != null) {
-            return bookService.searchByTitle(title);
+            return Response.ok().entity(bookService.searchByTitle(title)).build();
         } else {
             throw new BadRequestException("Should provide title query parameter");
         }
@@ -83,15 +100,15 @@ public class BookResource {
     })
     @GET
     @Path("/author")
-    public List<Book> findByAuthor(@RestQuery String author) throws IOException {
+    public Response findByAuthor(@RestQuery String author) throws IOException {
         if (author != null) {
-            return bookService.searchByAuthor(author);
+            return Response.ok().entity(bookService.searchByAuthor(author)).build();
         } else {
             throw new BadRequestException("Should provide author query parameter");
         }
     }
 
-    @Operation(operationId = "indexBooks", description = "Index new book data")
+    @Operation(operationId = "createBook", description = "Create new book data")
     @APIResponses(value = {
             @APIResponse(responseCode = "200", description = "Data successful indexed"),
             @APIResponse(responseCode = "400", description = "invalid data"),
@@ -100,11 +117,45 @@ public class BookResource {
             @APIResponse(responseCode = "500", description = "Server error")
     })
     @POST
-    public Response index(Book book) throws IOException {
+    public Response create(Book book) throws IOException {
         if (book.getId() == null) {
             book.setId(UUID.randomUUID().toString());
         }
-        bookService.index(book);
+        bookService.save(book);
         return Response.created(URI.create("/books/" + book.getId())).build();
+    }
+
+    @Operation(operationId = "updateBook", description = "Update book data")
+    @APIResponses(value = {
+        @APIResponse(responseCode = "200", description = "Data successful indexed"),
+        @APIResponse(responseCode = "400", description = "invalid data"),
+        @APIResponse(responseCode = "401", description = "Request not authorized"),
+        @APIResponse(responseCode = "404", description = "Service not found"),
+        @APIResponse(responseCode = "500", description = "Server error")
+    })
+    @POST
+    public Response update(Book book) throws IOException {
+        Book updatedBook = bookService.update(book);
+        return Response.ok().entity(updatedBook).build();
+    }
+
+    @Operation(operationId = "delete", description = "Find book with matching id")
+    @APIResponses(value = {
+        @APIResponse(responseCode = "200", description = "Successful retrieval"),
+        @APIResponse(responseCode = "400", description = "invalid query"),
+        @APIResponse(responseCode = "401", description = "Request not authorized"),
+        @APIResponse(responseCode = "404", description = "Service not found"),
+        @APIResponse(responseCode = "500", description = "Server error")
+    })
+    @DELETE
+    @Path("/{id}")
+    public Response delete(String id) throws IOException {
+        try {
+            bookService.delete(id);
+        } catch (Exception e) {
+            // TODO needs better error handling (more detailed errors)
+            throw new InternalServerErrorException(e);
+        }
+        return Response.noContent().build();
     }
 }
