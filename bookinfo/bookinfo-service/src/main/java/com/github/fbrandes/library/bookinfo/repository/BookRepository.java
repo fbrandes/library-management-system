@@ -3,11 +3,12 @@ package com.github.fbrandes.library.bookinfo.repository;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.InlineGet;
+import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
+import com.github.fbrandes.library.bookinfo.controller.BookResourceDto;
 import com.github.fbrandes.library.bookinfo.model.Book;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -24,16 +25,36 @@ public class BookRepository {
     @Inject
     ElasticsearchClient client;
 
-    public List<Book> findAll(int page, int size) throws IOException {
+    public BookResourceDto findAll(int page, int size) throws IOException {
         SearchRequest sr = SearchRequest.of(s -> s
-            .index(BOOK_INDEX)
-            .query(QueryBuilders.matchAll().build()._toQuery())
-            .size(size)
-            .from(page));
+                .index(BOOK_INDEX)
+                .query(QueryBuilders.matchAll().build()._toQuery())
+                .size(size)
+                .from(calculateOffset(page, size)));
 
         SearchResponse<Book> searchResponse = client.search(sr, Book.class);
         HitsMetadata<Book> hits = searchResponse.hits();
-        return hits.hits().stream().map(Hit::source).toList();
+
+        long total = hits.total() != null ? hits.total().value() : 0;
+
+        return BookResourceDto.builder()
+                .books(hits.hits().stream().map(Hit::source).toList())
+                .page(BookResourceDto.Page
+                        .of()
+                        .number(page)
+                        .total(total)
+                        .size(hits.hits().size())
+                        .hasNext(hasNext(page, size, total))
+                        .build())
+                .build();
+    }
+
+    private int calculateOffset(int page, int size) {
+        return page * size;
+    }
+
+    private boolean hasNext(int page, int size, long total) {
+        return ((long) (page + 1) * size) < total;
     }
 
     public void save(Book book) throws IOException {
@@ -46,17 +67,12 @@ public class BookRepository {
     }
 
     public Book update(Book book) throws IOException {
-        UpdateRequest<Book, Book> request = UpdateRequest.of(u -> u.index(BOOK_INDEX).doc(book));
+        UpdateRequest<Book, Book> request = UpdateRequest.of(u -> u.id(book.getId()).index(BOOK_INDEX).doc(book));
 
         UpdateResponse<Book> updateResponse = client.update(request, Book.class);
 
-        InlineGet<Book> result = updateResponse.get();
-        if(result != null && result.found()) {
-            if(result.source() == null) {
-                throw new InternalServerErrorException("update failed");
-            }
-
-            return result.source();
+        if (Result.Updated.equals(updateResponse.result())) {
+            return book;
         }
 
         throw new InternalServerErrorException("update failed");
@@ -68,7 +84,7 @@ public class BookRepository {
                         .id(id));
         GetResponse<Book> getResponse = client.get(getRequest, Book.class);
         if (getResponse.found()) {
-            if(getResponse.source() == null) {
+            if (getResponse.source() == null) {
                 return Optional.empty();
             }
             return Optional.of(getResponse.source());
@@ -83,6 +99,7 @@ public class BookRepository {
     public List<Book> findByAuthor(String author) throws IOException {
         return find("author", author);
     }
+
     public List<Book> findByIsbn(String isbn) throws IOException {
         return find("isbn", isbn);
     }

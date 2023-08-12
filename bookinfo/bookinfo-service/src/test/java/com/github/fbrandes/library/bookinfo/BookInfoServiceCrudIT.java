@@ -1,14 +1,11 @@
-package com.github.fbrandes.library.bookinfo.controller;
+package com.github.fbrandes.library.bookinfo;
 
 import com.github.fbrandes.library.bookinfo.model.Author;
 import com.github.fbrandes.library.bookinfo.model.Book;
-import com.google.gson.Gson;
-import io.quarkus.test.junit.QuarkusIntegrationTest;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.response.Response;
 import jakarta.ws.rs.core.MediaType;
-import org.junit.jupiter.api.*;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,9 +16,8 @@ import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@QuarkusIntegrationTest
-@Testcontainers
-class BookInfoServiceIT {
+@QuarkusTest
+class BookInfoServiceCrudIT {
 
     @Test
     void shouldCreateBookSuccessfully() {
@@ -63,22 +59,22 @@ class BookInfoServiceIT {
     }
 
     @Test
-    void shouldFetchBookSuccessfully() {
+    void shouldReadBookSuccessfully() {
         Book book = createBookData(UUID.randomUUID().toString());
 
         Response response =
-            given()
-                .body(book)
-                .header("Content-Type", MediaType.APPLICATION_JSON)
-                .when()
-                .post("/books");
+                given()
+                        .body(book)
+                        .header("Content-Type", MediaType.APPLICATION_JSON)
+                        .when()
+                        .post("/books");
 
         assertEquals(201, response.getStatusCode());
 
         response =
-            given()
-                .when()
-                .get("/books/" + book.getId());
+                given()
+                        .when()
+                        .get("/books/" + book.getId());
 
         assertEquals(200, response.getStatusCode());
         assertEquals(book.getId(), response.getBody().as(Book.class).getId());
@@ -89,22 +85,22 @@ class BookInfoServiceIT {
         Book book = createBookData(UUID.randomUUID().toString());
 
         Response response =
-            given()
-                .body(book)
-                .header("Content-Type", MediaType.APPLICATION_JSON)
-                .when()
-                .post("/books");
+                given()
+                        .body(book)
+                        .header("Content-Type", MediaType.APPLICATION_JSON)
+                        .when()
+                        .post("/books");
 
         assertEquals(201, response.getStatusCode());
 
         book.setTitle("Updated Title");
 
         response =
-            given()
-                .body(book)
-                .header("Content-Type", MediaType.APPLICATION_JSON)
-                .when()
-                .put("/books");
+                given()
+                        .body(book)
+                        .header("Content-Type", MediaType.APPLICATION_JSON)
+                        .when()
+                        .put("/books");
 
         assertEquals(200, response.getStatusCode());
         assertEquals(book.getTitle(), response.getBody().as(Book.class).getTitle());
@@ -115,20 +111,20 @@ class BookInfoServiceIT {
         Book book = createBookData(UUID.randomUUID().toString());
 
         Response response =
-            given()
-                .body(book)
-                .header("Content-Type", MediaType.APPLICATION_JSON)
-                .when()
-                .post("/books");
+                given()
+                        .body(book)
+                        .header("Content-Type", MediaType.APPLICATION_JSON)
+                        .when()
+                        .post("/books");
 
         assertEquals(201, response.getStatusCode());
 
         response =
-            given()
-                .body(book)
-                .header("Content-Type", MediaType.APPLICATION_JSON)
-                .when()
-                .delete("/books/" + book.getId());
+                given()
+                        .body(book)
+                        .header("Content-Type", MediaType.APPLICATION_JSON)
+                        .when()
+                        .delete("/books/" + book.getId());
 
         assertEquals(204, response.getStatusCode());
 

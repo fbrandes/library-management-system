@@ -35,7 +35,6 @@ dependencies {
 
     implementation platform('org.testcontainers:testcontainers-bom:1.18.3')
     testImplementation 'org.testcontainers:junit-jupiter'
-    testImplementation 'org.testcontainers:elasticsearch'
 }
 
 test {

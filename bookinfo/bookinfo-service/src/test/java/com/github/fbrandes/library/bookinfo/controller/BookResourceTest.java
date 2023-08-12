@@ -30,17 +30,25 @@ class BookResourceTest {
     @Mock
     private BookService bookService;
 
-    private List<Book> mockBooks;
+    private BookResourceDto bookResourceDto;
 
     @BeforeEach
     void setup() {
-        mockBooks = BookTestDataCreator.createBooks();
+        List<Book> books = BookTestDataCreator.createBooks();
+        bookResourceDto = BookResourceDto.builder()
+                .page(BookResourceDto.Page.of()
+                        .total(books.size())
+                        .size(books.size())
+                        .number(0)
+                        .build())
+                .books(books)
+                .build();
     }
 
     @Test
     void shouldFindAll() throws IOException {
         // given
-        when(bookService.findAll(0, 3)).thenReturn(mockBooks);
+        when(bookService.findAll(0, 3)).thenReturn(bookResourceDto);
 
         // when
         try (Response response = bookResource.findAll(0, 3)) {
@@ -48,10 +56,10 @@ class BookResourceTest {
             assertEquals(200, response.getStatus());
             assertNotNull(response.getEntity());
 
-            List<Book> books = response.readEntity(new GenericType<>() {});
-;
-            assertFalse(books.isEmpty());
-            assertEquals(3, books.size());
+            BookResourceDto bookDto = response.readEntity(BookResourceDto.class);
+
+            assertFalse(bookDto.getBooks().isEmpty());
+            assertEquals(3, bookDto.getBooks().size());
             verify(bookService).findAll(0, 3);
 
         }
@@ -60,8 +68,8 @@ class BookResourceTest {
     @Test
     void shouldFindBookById() throws IOException {
         // given
-        String findId = mockBooks.get(0).getId();
-        when(bookService.findById(eq(findId))).thenReturn(Optional.ofNullable(mockBooks.get(0)));
+        String findId = bookResourceDto.getBooks().get(0).getId();
+        when(bookService.findById(eq(findId))).thenReturn(Optional.ofNullable(bookResourceDto.getBooks().get(0)));
 
         // when
         try (Response response = bookResource.findById(findId)) {
@@ -77,14 +85,15 @@ class BookResourceTest {
     @Test
     void shouldFindBookByIsbn() throws IOException {
         // given
-        when(bookService.searchByIsbn(eq("978-0134685991"))).thenReturn(List.of(mockBooks.get(1)));
+        when(bookService.searchByIsbn(eq("978-0134685991"))).thenReturn(List.of(bookResourceDto.getBooks().get(1)));
 
         // when
         try (Response response = bookResource.findByIsbn("978-0134685991")) {
             // then
             assertEquals(200, response.getStatus());
 
-            List<Book> books = response.readEntity(new GenericType<>() {});
+            List<Book> books = response.readEntity(new GenericType<>() {
+            });
             assertEquals(1, books.size());
 
             Book book = books.get(0);
@@ -101,14 +110,15 @@ class BookResourceTest {
     @Test
     void shouldFindBookByTitle() throws IOException {
         // given
-        when(bookService.searchByTitle(eq("The Pragmatic Programmer"))).thenReturn(List.of(mockBooks.get(2)));
+        when(bookService.searchByTitle(eq("The Pragmatic Programmer"))).thenReturn(List.of(bookResourceDto.getBooks().get(2)));
 
         // when
         try (Response response = bookResource.findByTitle("The Pragmatic Programmer")) {
             // then
             assertEquals(200, response.getStatus());
 
-            List<Book> books = response.readEntity(new GenericType<>() {});
+            List<Book> books = response.readEntity(new GenericType<>() {
+            });
             assertEquals(1, books.size());
 
             Book book = books.get(0);
@@ -125,14 +135,15 @@ class BookResourceTest {
     @Test
     void shouldFindBookByAuthor() throws IOException {
         // given
-        when(bookService.searchByAuthor(eq("Andrew Hunt"))).thenReturn(List.of(mockBooks.get(2)));
+        when(bookService.searchByAuthor(eq("Andrew Hunt"))).thenReturn(List.of(bookResourceDto.getBooks().get(2)));
 
         // when
         try (Response response = bookResource.findByAuthor("Andrew Hunt")) {
             // then
             assertEquals(200, response.getStatus());
 
-            List<Book> books = response.readEntity(new GenericType<>() {});
+            List<Book> books = response.readEntity(new GenericType<>() {
+            });
             assertEquals(1, books.size());
 
             Book book = books.get(0);
@@ -148,8 +159,8 @@ class BookResourceTest {
     @Test
     void shouldReturnSameBookForCoAuthors() throws IOException {
         // given
-        when(bookService.searchByAuthor(eq("Andrew Hunt"))).thenReturn(List.of(mockBooks.get(2)));
-        when(bookService.searchByAuthor(eq("David Thomas"))).thenReturn(List.of(mockBooks.get(2)));
+        when(bookService.searchByAuthor(eq("Andrew Hunt"))).thenReturn(List.of(bookResourceDto.getBooks().get(2)));
+        when(bookService.searchByAuthor(eq("David Thomas"))).thenReturn(List.of(bookResourceDto.getBooks().get(2)));
 
         // when
         List<Book> b1 = (bookResource.findByAuthor("Andrew Hunt").readEntity(new GenericType<>() {}));

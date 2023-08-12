@@ -1,6 +1,7 @@
 package com.github.fbrandes.library.bookinfo.service;
 
 import com.github.fbrandes.library.bookinfo.BookTestDataCreator;
+import com.github.fbrandes.library.bookinfo.controller.BookResourceDto;
 import com.github.fbrandes.library.bookinfo.model.Book;
 import com.github.fbrandes.library.bookinfo.repository.BookRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,31 +27,39 @@ class BookServiceTest {
     @Mock
     private BookRepository bookRepository;
 
-    private List<Book> mockBooks;
+    private BookResourceDto bookResourceDto;
 
     @BeforeEach
     void setUp() {
-        mockBooks = BookTestDataCreator.createBooks();
+        List<Book> books = BookTestDataCreator.createBooks();
+        bookResourceDto = BookResourceDto.builder()
+                .books(books)
+                .page(BookResourceDto.Page.of()
+                        .number(0)
+                        .total(books.size())
+                        .size(books.size())
+                        .build())
+                .build();
     }
 
     @Test
     void shouldFindAll() throws IOException {
         // given
-        when(bookRepository.findAll(0, 3)).thenReturn(mockBooks);
+        when(bookRepository.findAll(0, 3)).thenReturn(bookResourceDto);
 
         // when
-        List<Book> books = bookService.findAll(0, 3);
+        BookResourceDto books = bookService.findAll(0, 3);
 
         // then
-        assertFalse(books.isEmpty());
-        assertEquals(3, books.size());
+        assertFalse(books.getBooks().isEmpty());
+        assertEquals(3, books.getBooks().size());
     }
 
     @Test
     void shouldFindBook() throws IOException {
         // given
-        doNothing().when(bookRepository).save(mockBooks.get(0));
-        Book book = mockBooks.get(0);
+        doNothing().when(bookRepository).save(bookResourceDto.getBooks().get(0));
+        Book book = bookResourceDto.getBooks().get(0);
 
         // when
         bookService.save(book);
@@ -60,10 +69,10 @@ class BookServiceTest {
     }
 
     @Test
-    void get() throws IOException {
+    void shouldFindById() throws IOException {
         // given
-        String bookId = mockBooks.get(0).getId();
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(mockBooks.get(0)));
+        String bookId = bookResourceDto.getBooks().get(0).getId();
+        when(bookRepository.findById(bookId)).thenReturn(Optional.of(bookResourceDto.getBooks().get(0)));
 
         // when
         Optional<Book> book = bookService.findById(bookId);
@@ -75,10 +84,10 @@ class BookServiceTest {
     }
 
     @Test
-    void searchByTitle() throws IOException {
+    void shouldFindByTitle() throws IOException {
         // given
-        String title = mockBooks.get(0).getTitle();
-        when(bookRepository.findByTitle(title)).thenReturn(List.of(mockBooks.get(0)));
+        String title = bookResourceDto.getBooks().get(0).getTitle();
+        when(bookRepository.findByTitle(title)).thenReturn(List.of(bookResourceDto.getBooks().get(0)));
 
         // when
         List<Book> books = bookService.searchByTitle(title);
@@ -89,10 +98,10 @@ class BookServiceTest {
     }
 
     @Test
-    void searchByAuthor() throws IOException {
+    void shouldFindByAuthor() throws IOException {
         // given
-        String author = mockBooks.get(0).getAuthors().get(0).getName();
-        when(bookRepository.findByAuthor(author)).thenReturn(List.of(mockBooks.get(0)));
+        String author = bookResourceDto.getBooks().get(0).getAuthors().get(0).getName();
+        when(bookRepository.findByAuthor(author)).thenReturn(List.of(bookResourceDto.getBooks().get(0)));
 
         // when
         List<Book> books = bookService.searchByAuthor(author);
@@ -103,10 +112,10 @@ class BookServiceTest {
     }
 
     @Test
-    void searchByIsbn() throws IOException {
+    void shouldFindByIsbn() throws IOException {
         // given
-        String isbn = mockBooks.get(0).getIsbn().get(0).getIdentifier();
-        when(bookRepository.findByIsbn(isbn)).thenReturn(List.of(mockBooks.get(0)));
+        String isbn = bookResourceDto.getBooks().get(0).getIsbn().get(0).getIdentifier();
+        when(bookRepository.findByIsbn(isbn)).thenReturn(List.of(bookResourceDto.getBooks().get(0)));
 
         // when
         List<Book> books = bookService.searchByIsbn(isbn);

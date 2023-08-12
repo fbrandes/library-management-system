@@ -1,5 +1,6 @@
 package com.github.fbrandes.library.bookinfo.service;
 
+import com.github.fbrandes.library.bookinfo.controller.BookResourceDto;
 import com.github.fbrandes.library.bookinfo.model.Book;
 import com.github.fbrandes.library.bookinfo.repository.BookRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -14,7 +15,7 @@ public class BookService {
     @Inject
     BookRepository bookRepository;
 
-    public List<Book> findAll(int page, int size) throws IOException {
+    public BookResourceDto findAll(int page, int size) throws IOException {
         return bookRepository.findAll(page, size);
     }
 

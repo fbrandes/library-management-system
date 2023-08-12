@@ -23,11 +23,9 @@ import static org.mockserver.model.HttpResponse.response;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("it")
-@ContextConfiguration(
-    initializers = GatewayIT.GatewayPropertiesInitializer.class,
-    classes = GatewayApplication.class)
+@ContextConfiguration(initializers = GatewayIT.GatewayPropertiesInitializer.class, classes = GatewayApplication.class)
 @Testcontainers
-public class GatewayIT {
+class GatewayIT {
     @Container
     private static final MockServerContainer mockServer = new MockServerContainer(DockerImageName
             .parse("mockserver/mockserver")
@@ -41,6 +39,8 @@ public class GatewayIT {
 
     private static final String ID = "a3c5ecf3-ca19-4d4e-a9be-4f4142f37460";
 
+    private static final String ISBN = "978-0-201-83595-3";
+
     @BeforeAll
     static void prepareMocks() {
         mockClient = new MockServerClient(mockServer.getHost(), mockServer.getServerPort());
@@ -52,8 +52,7 @@ public class GatewayIT {
             .respond(
                 response()
                     .withStatusCode(200)
-                    .withBody("{ \"id\": \"a3c5ecf3-ca19-4d4e-a9be-4f4142f37460\", \"title\": \"Some Book\"," +
-                        " \"isbn\": \"978-0-201-83595-3\"}")
+                    .withBody(String.format("{ \"id\": \"%s\", \"title\": \"Some Book\", \"isbn\": \"%s\"}", ID, ISBN))
             );
     }
 
@@ -65,16 +64,15 @@ public class GatewayIT {
             .expectStatus()
             .isOk()
             .expectBody()
-            .json("{ \"id\": \"a3c5ecf3-ca19-4d4e-a9be-4f4142f37460\", \"title\": \"Some Book\"," +
-                " \"isbn\": \"978-0-201-83595-3\"}");
+            .json(String.format("{ \"id\": \"%s\", \"title\": \"Some Book\", \"isbn\": \"%s\"}", ID, ISBN));
     }
 
     static class GatewayPropertiesInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
         @Override
-        public void initialize (@NotNull ConfigurableApplicationContext configurableApplicationContext){
-            String mockServerUri = String.format("http://%s:%d", mockServer.getHost(), mockServer.getServerPort());
-
-            TestPropertyValues.of("BOOKINFO_URI=" + mockServerUri).applyTo(configurableApplicationContext);
+        public void initialize(@NotNull ConfigurableApplicationContext configurableApplicationContext) {
+            TestPropertyValues
+                    .of("BOOKINFO_URI=" + String.format("http://%s:%d", mockServer.getHost(), mockServer.getServerPort()))
+                    .applyTo(configurableApplicationContext);
         }
     }
 
